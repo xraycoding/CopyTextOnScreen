@@ -1,0 +1,56 @@
+name: Build Copy Text for macOS
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Python packages
+        run: |
+          python -m pip install --upgrade pip
+          pip install pillow pytesseract pyperclip pynput pyinstaller
+
+      - name: Install Tesseract
+        run: |
+          brew install tesseract
+
+      - name: Prepare bundled Tesseract
+        run: |
+          mkdir -p tesseract
+          cp "$(which tesseract)" tesseract/tesseract
+          cp -R "$(brew --prefix tesseract)/share/tessdata" tesseract/tessdata
+
+      - name: Build application
+        run: |
+          pyinstaller \
+            --windowed \
+            --onefile \
+            --name "Copy Text" \
+            --add-binary "tesseract/tesseract:tesseract" \
+            --add-data "tesseract/tessdata:tesseract/tessdata" \
+            copytext.py
+
+      - name: Create ZIP
+        run: |
+          cd dist
+          ditto -c -k --sequesterRsrc --keepParent "Copy Text.app" "Copy Text macOS.zip"
+
+      - name: Upload macOS app
+        uses: actions/upload-artifact@v4
+        with:
+          name: Copy Text macOS
+          path: dist/Copy Text macOS.zip
