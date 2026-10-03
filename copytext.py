@@ -16,12 +16,8 @@ def resource_path(path):
     return os.path.join(os.path.dirname(os.path.abspath(__file__)), path)
 
 def find_tesseract():
-    bundled = resource_path(
-        os.path.join(
-            "tesseract",
-            "tesseract.exe" if sys.platform == "win32" else "tesseract"
-        )
-    )
+    name = "tesseract.exe" if sys.platform == "win32" else "tesseract"
+    bundled = resource_path(os.path.join("tesseract", name))
 
     if os.path.isfile(bundled):
         return bundled
@@ -31,14 +27,10 @@ def find_tesseract():
     if system:
         return system
 
-    mac_paths = [
-        "/opt/homebrew/bin/tesseract",
-        "/usr/local/bin/tesseract"
-    ]
-
-    for path in mac_paths:
-        if os.path.isfile(path):
-            return path
+    if sys.platform == "darwin":
+        for path in ["/opt/homebrew/bin/tesseract", "/usr/local/bin/tesseract"]:
+            if os.path.isfile(path):
+                return path
 
     return None
 
@@ -49,7 +41,13 @@ if not tesseract:
 
 pytesseract.pytesseract.tesseract_cmd = tesseract
 
+tessdata = resource_path(os.path.join("tesseract", "tessdata"))
+
+if os.path.isdir(tessdata):
+    os.environ["TESSDATA_PREFIX"] = tessdata
+
 hotkey = "<ctrl>+<alt>+s"
+
 q = queue.Queue()
 root = None
 
@@ -152,4 +150,3 @@ threading.Thread(
 
 root.after(50, check)
 root.mainloop()
-

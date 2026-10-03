@@ -28,7 +28,7 @@ jobs:
         run: |
           brew install tesseract
 
-      - name: Prepare bundled Tesseract
+      - name: Prepare Tesseract
         run: |
           mkdir -p tesseract
           cp "$(which tesseract)" tesseract/tesseract
@@ -53,4 +53,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Copy Text macOS
-          path: dist/Copy Text macOS.zip
+          path: "dist/Copy Text macOS.zip"
